@@ -1,0 +1,26 @@
+name: study
+
+services:
+  app:
+    build:
+      context: ./code/app
+      dockerfile: Dockerfile
+    container_name: study-app
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8501}:8501"
+    environment:
+      STREAMLIT_SERVER_ADDRESS: 0.0.0.0
+      STREAMLIT_SERVER_PORT: 8501
+      STREAMLIT_BROWSER_GATHER_USAGE_STATS: "false"
+    # Если в приложении понадобится читать данные/выгружать отчёты —
+    # раскомментируй маунты:
+    # volumes:
+    #   - ./data:/app/data:ro
+    #   - ./pdf:/app/pdf
+    networks:
+      - study-net
+
+networks:
+  study-net:
+    driver: bridge
