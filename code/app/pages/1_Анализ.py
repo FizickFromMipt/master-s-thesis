@@ -16,7 +16,7 @@ from core.processing import process  # noqa: E402
 from core.synthetic import PRESETS, simulate  # noqa: E402
 from core.ui import init_page, render_footer  # noqa: E402
 
-init_page("Анализ")
+init_page("Анализ", sidebar="expanded")
 
 st.title("Анализ измерений")
 st.caption("Интерактивная демонстрация пайплайна на синтетических данных.")

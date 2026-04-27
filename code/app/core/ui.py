@@ -1,4 +1,4 @@
-"""Общая UI-обвязка: тема, шапка, футер. Используется всеми страницами."""
+"""Общая UI-обвязка: тема, шапка с верхней навигацией, футер."""
 
 from __future__ import annotations
 
@@ -11,10 +11,13 @@ import streamlit as st
 APP_ROOT = Path(__file__).resolve().parents[1]
 LOGO_PATH = APP_ROOT / "assets" / "logo.jpg"
 
-BRAND_TITLE = "ЭПР в БЭК · гибридный метод"
-DEPARTMENT = "МФТИ · ФРКТ · кафедра радиофизики и технической кибернетики"
-THESIS_LINE = "Магистерская выпускная квалификационная работа · 2026"
 REPO_URL = "https://github.com/FizickFromMipt/master-s-thesis"
+
+_NAV = [
+    ("Главная", "app.py"),
+    ("Анализ", "pages/1_Анализ.py"),
+    ("О работе", "pages/2_О_работе.py"),
+]
 
 
 @lru_cache(maxsize=1)
@@ -22,21 +25,20 @@ def _logo_b64() -> str:
     return base64.b64encode(LOGO_PATH.read_bytes()).decode("ascii")
 
 
-def init_page(page_title: str) -> None:
-    """Вызывать в самом верху каждого скрипта страницы."""
+def init_page(page_title: str, *, sidebar: str = "collapsed") -> None:
+    """В самом верху каждой страницы. По умолчанию сайдбар свёрнут."""
     st.set_page_config(
         page_title=f"{page_title} · ЭПР в БЭК",
         page_icon=str(LOGO_PATH),
         layout="wide",
-        initial_sidebar_state="expanded",
+        initial_sidebar_state=sidebar,
     )
     _inject_css()
-    _render_header()
-    _render_sidebar_brand()
+    _render_top_nav()
 
 
 def render_footer() -> None:
-    """Вызывать в самом конце каждого скрипта страницы."""
+    """В самом низу каждой страницы."""
     st.markdown(
         f"""
         <div class="app-footer">
@@ -53,90 +55,180 @@ def _inject_css() -> None:
     st.markdown(
         """
         <style>
-        /* убрать стандартный хром Streamlit */
+        /* ── скрыть стандартный хром Streamlit ───────────────────── */
         #MainMenu {visibility: hidden;}
         header[data-testid="stHeader"] {visibility: hidden; height: 0;}
         footer {visibility: hidden;}
+        /* убрать автонавигацию по pages/ из сайдбара */
+        section[data-testid="stSidebarNav"] {display: none;}
 
-        /* основной контейнер */
+        /* ── глобальное ──────────────────────────────────────────── */
+        html, body, [class*="css"] {
+            font-family: -apple-system, BlinkMacSystemFont, "Inter",
+                         "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+        }
         .block-container {
             padding-top: 1.25rem;
-            padding-bottom: 5rem;
+            padding-bottom: 6rem;
             max-width: 1280px;
         }
+        h1 { font-weight: 700; letter-spacing: -0.015em; color: #15172B; }
+        h2, h3 { color: #1F2140; font-weight: 600; }
 
-        /* шапка */
-        .app-header {
+        /* ── верхняя навигация ───────────────────────────────────── */
+        .top-nav__brand {
             display: flex;
             align-items: center;
-            gap: 1rem;
-            padding: 0.5rem 0 1rem;
-            border-bottom: 1px solid #E4E6EE;
-            margin-bottom: 1.5rem;
+            gap: 0.85rem;
         }
-        .app-header__logo {
-            height: 56px;
-            width: 56px;
+        .top-nav__logo {
+            height: 44px;
+            width: 44px;
             object-fit: contain;
             flex-shrink: 0;
         }
-        .app-header__text { display: flex; flex-direction: column; gap: 2px; }
-        .app-header__title {
-            font-size: 1.05rem;
+        .top-nav__title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #2D2E83;
+            line-height: 1.2;
+            margin: 0;
+        }
+        .top-nav__subtitle {
+            font-size: 0.75rem;
+            color: #8A8E9F;
+            font-weight: 400;
+            margin: 0;
+        }
+        .top-nav-divider {
+            height: 1px;
+            background: linear-gradient(
+                to right, transparent, #E4E6EE 15%, #E4E6EE 85%, transparent
+            );
+            margin: 0.5rem 0 2rem;
+        }
+
+        /* ссылки навигации — стиль "tab" */
+        [data-testid="stPageLink"] {
+            text-align: center;
+        }
+        [data-testid="stPageLink"] a {
+            padding: 8px 14px !important;
+            border-radius: 8px !important;
+            font-weight: 500 !important;
+            color: #4A4E70 !important;
+            transition: background 0.15s, color 0.15s !important;
+        }
+        [data-testid="stPageLink"] a:hover {
+            background: #E8E9F4 !important;
+            color: #2D2E83 !important;
+        }
+
+        /* ── hero (главная) ──────────────────────────────────────── */
+        .hero { padding: 1.5rem 0 0.5rem; }
+        .hero__eyebrow {
+            display: inline-block;
+            font-size: 0.75rem;
             font-weight: 600;
             color: #2D2E83;
-            margin: 0; line-height: 1.25;
+            background: #E8E9F4;
+            padding: 5px 12px;
+            border-radius: 999px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 1rem;
         }
-        .app-header__subtitle {
-            font-size: 0.82rem;
-            color: #6B6E80;
-            margin: 0; line-height: 1.3;
+        .hero__title {
+            font-size: 2.6rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: #15172B;
+            line-height: 1.12;
+            margin: 0 0 1.1rem;
+            max-width: 820px;
+        }
+        .hero__title em {
+            font-style: normal;
+            background: linear-gradient(135deg, #2D2E83 0%, #5557D9 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero__lead {
+            font-size: 1.1rem;
+            color: #4A4E70;
+            line-height: 1.55;
+            max-width: 720px;
+            margin: 0 0 1.5rem;
         }
 
-        /* типографика */
-        h1 { font-weight: 700; letter-spacing: -0.015em; color: #15172B; }
-        h2, h3 { color: #1F2140; }
-
-        /* sidebar */
-        section[data-testid="stSidebar"] {
-            background: #F4F5FA;
-            border-right: 1px solid #E4E6EE;
+        /* ── карточки (st.container border=True) ─────────────────── */
+        [data-testid="stVerticalBlockBorderWrapper"] {
+            background: #FFFFFF;
+            box-shadow:
+                0 1px 2px rgba(20, 22, 50, 0.04),
+                0 2px 12px rgba(20, 22, 50, 0.04);
+            border-radius: 14px !important;
+            border: 1px solid #ECEEF5 !important;
+            transition: box-shadow 0.2s, transform 0.2s;
         }
-        section[data-testid="stSidebar"] .sidebar-brand {
-            display: flex; flex-direction: column; align-items: center;
-            gap: 0.5rem; padding: 0.5rem 0 1rem;
-            border-bottom: 1px solid #E4E6EE; margin-bottom: 1rem;
-        }
-        section[data-testid="stSidebar"] .sidebar-brand img {
-            height: 64px; width: 64px; object-fit: contain;
-        }
-        section[data-testid="stSidebar"] .sidebar-brand .name {
-            font-size: 0.85rem; font-weight: 600; color: #2D2E83;
-            text-align: center; line-height: 1.25;
+        [data-testid="stVerticalBlockBorderWrapper"]:hover {
+            box-shadow:
+                0 1px 2px rgba(20, 22, 50, 0.05),
+                0 4px 20px rgba(20, 22, 50, 0.07);
         }
 
-        /* кнопки */
+        /* ── кнопки ──────────────────────────────────────────────── */
         .stButton > button {
             border-radius: 8px;
             font-weight: 500;
+            transition: all 0.15s;
+        }
+        .stButton > button[kind="primary"] {
+            box-shadow: 0 1px 3px rgba(45, 46, 131, 0.25);
+        }
+        .stButton > button[kind="primary"]:hover {
+            box-shadow: 0 2px 8px rgba(45, 46, 131, 0.35);
+            transform: translateY(-1px);
         }
 
-        /* метрики */
+        /* ── метрики ─────────────────────────────────────────────── */
         [data-testid="stMetric"] {
-            background: #F7F8FC;
+            background: linear-gradient(135deg, #F7F8FC 0%, #EFF1FA 100%);
             border: 1px solid #E4E6EE;
-            border-radius: 10px;
-            padding: 12px 16px;
+            border-radius: 12px;
+            padding: 16px 20px;
+        }
+        [data-testid="stMetricValue"] {
+            color: #2D2E83 !important;
+            font-weight: 700 !important;
         }
 
-        /* sticky footer */
+        /* ── input-ы ─────────────────────────────────────────────── */
+        [data-baseweb="input"], [data-baseweb="select"] {
+            border-radius: 8px !important;
+        }
+
+        /* ── sidebar (для страницы Анализ) ───────────────────────── */
+        section[data-testid="stSidebar"] {
+            background: #F7F8FB;
+            border-right: 1px solid #E4E6EE;
+        }
+        section[data-testid="stSidebar"] h2,
+        section[data-testid="stSidebar"] h3 {
+            font-size: 0.95rem !important;
+            color: #2D2E83 !important;
+            margin-top: 0.5rem !important;
+        }
+
+        /* ── sticky-футер ────────────────────────────────────────── */
         .app-footer {
             position: fixed;
             left: 0; right: 0; bottom: 0;
             padding: 0.7rem 1.5rem;
             background: rgba(255, 255, 255, 0.92);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             border-top: 1px solid #E4E6EE;
             font-size: 0.8rem;
             color: #6B6E80;
@@ -146,40 +238,35 @@ def _inject_css() -> None:
         .app-footer a {
             color: #2D2E83;
             text-decoration: none;
+            font-weight: 500;
         }
         .app-footer a:hover { text-decoration: underline; }
-        .app-footer__sep { margin: 0 0.5rem; opacity: 0.5; }
+        .app-footer__sep { margin: 0 0.6rem; opacity: 0.5; }
         </style>
         """,
         unsafe_allow_html=True,
     )
 
 
-def _render_header() -> None:
-    st.markdown(
-        f"""
-        <div class="app-header">
-            <img class="app-header__logo"
-                 src="data:image/jpeg;base64,{_logo_b64()}"
-                 alt="Кафедра РФиТК">
-            <div class="app-header__text">
-                <p class="app-header__title">{DEPARTMENT}</p>
-                <p class="app-header__subtitle">{THESIS_LINE}</p>
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
-def _render_sidebar_brand() -> None:
-    with st.sidebar:
+def _render_top_nav() -> None:
+    cols = st.columns([4, 1, 1, 1], vertical_alignment="center")
+    with cols[0]:
         st.markdown(
             f"""
-            <div class="sidebar-brand">
-                <img src="data:image/jpeg;base64,{_logo_b64()}" alt="logo">
-                <div class="name">Кафедра РФиТК<br>МФТИ · ФРКТ</div>
+            <div class="top-nav__brand">
+                <img class="top-nav__logo"
+                     src="data:image/jpeg;base64,{_logo_b64()}"
+                     alt="logo">
+                <div>
+                    <p class="top-nav__title">ЭПР в БЭК · гибридный метод</p>
+                    <p class="top-nav__subtitle">МФТИ ФРКТ · кафедра РФиТК · 2026</p>
+                </div>
             </div>
             """,
             unsafe_allow_html=True,
         )
+    for i, (label, path) in enumerate(_NAV):
+        with cols[i + 1]:
+            st.page_link(path, label=label)
+
+    st.markdown('<div class="top-nav-divider"></div>', unsafe_allow_html=True)
