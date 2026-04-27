@@ -2,9 +2,13 @@ name: study
 
 services:
   app:
+    # На сервере образ тянется из GHCR (см. .github/workflows/deploy.yml).
+    # Локально `docker compose up --build` пересоберёт под этим же тегом.
+    image: ghcr.io/fizickfrommipt/master-s-thesis:latest
     build:
       context: ./code/app
       dockerfile: Dockerfile
+    pull_policy: always
     container_name: study-app
     restart: unless-stopped
     ports:
