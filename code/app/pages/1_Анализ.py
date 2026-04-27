@@ -14,23 +14,26 @@ if str(APP_ROOT) not in sys.path:
 
 from core.processing import process  # noqa: E402
 from core.synthetic import PRESETS, simulate  # noqa: E402
+from core.ui import init_page, render_footer  # noqa: E402
 
-st.set_page_config(page_title="Анализ | ЭПР в БЭК", layout="wide")
+init_page("Анализ")
+
 st.title("Анализ измерений")
+st.caption("Интерактивная демонстрация пайплайна на синтетических данных.")
 
 with st.sidebar:
-    st.header("Сценарий")
+    st.subheader("Сценарий")
     preset_keys = list(PRESETS.keys())
     preset_labels = {k: PRESETS[k]["chamber"].label for k in preset_keys}
     preset_choice = st.selectbox(
-        "Выберите пресет",
+        "Пресет камеры",
         preset_keys,
         format_func=lambda k: preset_labels[k],
         index=1,
     )
     st.caption("Синтетические данные для демонстрации пайплайна.")
-    st.divider()
-    st.header("Параметры обработки")
+
+    st.subheader("Параметры обработки")
     gate_width = st.slider(
         "Ширина селекции по дальности, м",
         min_value=0.1,
@@ -39,38 +42,40 @@ with st.sidebar:
         step=0.1,
     )
     seed = st.number_input("Seed генератора", value=42, step=1)
-    st.divider()
+    st.write("")
     run = st.button("Обработать", type="primary", use_container_width=True)
 
 preset = PRESETS[preset_choice]
 chamber = preset["chamber"]
 measurement = preset["measurement"]
 
-left, right = st.columns([1, 1])
+left, right = st.columns([1, 1], gap="large")
 with left:
-    st.subheader("Конфигурация")
-    st.markdown(
-        f"""
+    with st.container(border=True):
+        st.subheader("Конфигурация")
+        st.markdown(
+            f"""
 - **Сценарий:** {chamber.label}
 - **Диапазон частот:** {measurement.f_start_hz / 1e9:.1f}–{measurement.f_stop_hz / 1e9:.1f} ГГц
-- **Количество точек по частоте:** {measurement.n_freq}
-- **Количество углов:** {measurement.n_angles}
+- **Точек по частоте:** {measurement.n_freq}
+- **Углов:** {measurement.n_angles}
 - **Дальность цели:** {measurement.target_range_m:.2f} м
 - **ЭПР цели (задано):** {measurement.target_rcs_dbsm:+.1f} дБ·м²
 - **Помехи:** {len(chamber.clutter_ranges_m)} источник(ов),
   уровень {chamber.clutter_level_db:+.1f} дБ относительно цели
-        """
-    )
+            """
+        )
 with right:
-    st.subheader("Ожидаемый результат")
-    st.markdown(
-        """
+    with st.container(border=True):
+        st.subheader("Ожидаемый результат")
+        st.markdown(
+            """
 - восстановленная ДОР ближе к эталонной форме;
 - выраженное снижение помеховых лепестков;
 - положительный PSR (чем больше, тем лучше подавление);
 - диагностический отчёт об источниках помех.
-        """
-    )
+            """
+        )
 
 if run:
     with st.spinner("Симуляция и обработка…"):
@@ -85,6 +90,13 @@ if run:
         f"{result.gate_low_m:.2f}–{result.gate_high_m:.2f} м."
     )
 
+    st.subheader("Метрики")
+    m1, m2, m3 = st.columns(3)
+    m1.metric("PSR (подавление помех)", f"{result.psr_db:+.1f} дБ")
+    rcs_peak_db = float(np.max(result.rcs_cleaned_db))
+    m2.metric("Пиковый уровень ДОР (гибрид)", f"{rcs_peak_db:+.2f} дБ")
+    m3.metric("Время обработки", f"{elapsed * 1000:.0f} мс")
+
     st.subheader("Диаграмма обратного рассеяния (360°)")
     fig = go.Figure()
     fig.add_trace(
@@ -93,7 +105,7 @@ if run:
             theta=sim.angles_deg,
             mode="lines",
             name="Сырая",
-            line=dict(width=1),
+            line=dict(width=1, color="#9CA0BF"),
         )
     )
     fig.add_trace(
@@ -102,7 +114,7 @@ if run:
             theta=sim.angles_deg,
             mode="lines",
             name="Классика (time-gating)",
-            line=dict(width=1.5, dash="dash"),
+            line=dict(width=1.5, dash="dash", color="#5A9B8E"),
         )
     )
     fig.add_trace(
@@ -111,7 +123,7 @@ if run:
             theta=sim.angles_deg,
             mode="lines",
             name="Гибридный метод",
-            line=dict(width=2),
+            line=dict(width=2.5, color="#2D2E83"),
         )
     )
     fig.update_layout(
@@ -123,13 +135,14 @@ if run:
             ),
             angularaxis=dict(direction="clockwise"),
         ),
-        legend=dict(orientation="h"),
+        legend=dict(orientation="h", y=-0.05),
         height=520,
         margin=dict(l=10, r=10, t=30, b=10),
+        paper_bgcolor="rgba(0,0,0,0)",
     )
     st.plotly_chart(fig, use_container_width=True)
 
-    col_a, col_b = st.columns([1, 1])
+    col_a, col_b = st.columns([1, 1], gap="large")
     with col_a:
         st.subheader("Range-Doppler изображение")
         fig_rd = go.Figure(
@@ -148,6 +161,7 @@ if run:
             yaxis_title="Нормированная Doppler-частота",
             height=420,
             margin=dict(l=10, r=10, t=30, b=10),
+            paper_bgcolor="rgba(0,0,0,0)",
         )
         st.plotly_chart(fig_rd, use_container_width=True)
 
@@ -160,14 +174,15 @@ if run:
                 y=20 * np.log10(result.range_profile / result.range_profile.max() + 1e-12),
                 mode="lines",
                 name="|Profile|, дБ",
+                line=dict(color="#2D2E83", width=2),
             )
         )
         fig_rp.add_vrect(
             x0=result.gate_low_m,
             x1=result.gate_high_m,
             line_width=0,
-            fillcolor="green",
-            opacity=0.15,
+            fillcolor="#2D2E83",
+            opacity=0.12,
             annotation_text="ворота цели",
             annotation_position="top left",
         )
@@ -177,15 +192,9 @@ if run:
             height=420,
             margin=dict(l=10, r=10, t=30, b=10),
             showlegend=False,
+            paper_bgcolor="rgba(0,0,0,0)",
         )
         st.plotly_chart(fig_rp, use_container_width=True)
-
-    st.subheader("Метрики")
-    m1, m2, m3 = st.columns(3)
-    m1.metric("PSR (подавление помех)", f"{result.psr_db:+.1f} дБ")
-    rcs_peak_db = float(np.max(result.rcs_cleaned_db))
-    m2.metric("Пиковый уровень ДОР (гибрид)", f"{rcs_peak_db:+.2f} дБ")
-    m3.metric("Время обработки", f"{elapsed * 1000:.0f} мс")
 
     st.subheader("Диагностический отчёт (заготовка VLM)")
     st.info(
@@ -203,3 +212,5 @@ if run:
     )
 else:
     st.info("Нажмите «Обработать» в панели слева, чтобы запустить демонстрацию.")
+
+render_footer()

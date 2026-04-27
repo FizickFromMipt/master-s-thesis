@@ -2,11 +2,9 @@
 
 import streamlit as st
 
-st.set_page_config(
-    page_title="ЭПР в БЭК: гибридный метод",
-    page_icon=None,
-    layout="wide",
-)
+from core.ui import init_page, render_footer
+
+init_page("Главная")
 
 st.title("Устранение помех при измерении ЭПР в БЭК")
 st.caption(
@@ -14,14 +12,7 @@ st.caption(
     "помеховых сигналов визуально-языковой моделью"
 )
 
-st.markdown(
-    """
-Магистерская выпускная квалификационная работа,
-МФТИ, ФРКТ, кафедра радиофизики и технической кибернетики, 2026.
-"""
-)
-
-col_left, col_right = st.columns([2, 1])
+col_left, col_right = st.columns([2, 1], gap="large")
 
 with col_left:
     st.subheader("Что делает этот инструмент")
@@ -73,22 +64,31 @@ with col_left:
     )
 
 with col_right:
-    st.subheader("Основные метрики")
-    st.markdown(
-        """
+    with st.container(border=True):
+        st.subheader("Основные метрики")
+        st.markdown(
+            """
 - **PSR** (Parasitic Suppression Ratio), дБ
 - **Ширина главного лепестка** ДОР
 - **Уровень боковых максимумов**
 - **Погрешность ЭПР** относительно эталона
 - **Время обработки**
-        """
-    )
-    st.subheader("Перейти")
-    st.page_link("pages/1_Анализ.py", label="Анализ измерений")
-    st.page_link("pages/2_О_работе.py", label="О работе")
+            """
+        )
 
-st.divider()
-st.caption(
-    "Репозиторий: github.com/FizickFromMipt/master-s-thesis · "
-    "Автор: Певненко А.А. · Научный руководитель: Елизаров С.В., к.т.н."
-)
+    with st.container(border=True):
+        st.subheader("Перейти")
+        st.page_link("pages/1_Анализ.py", label="Анализ измерений", icon=":material/insights:")
+        st.page_link("pages/2_О_работе.py", label="О работе", icon=":material/info:")
+
+    with st.container(border=True):
+        st.subheader("Авторы")
+        st.markdown(
+            """
+- **Студент:** Певненко А.А.
+- **Научный руководитель:** Елизаров С.В., к.т.н.
+- **База:** ПАО «Радиофизика»
+            """
+        )
+
+render_footer()
