@@ -39,6 +39,9 @@ Thumbs.db
 # Claude Code локальные настройки
 .claude/
 
+# Справочные материалы — слишком тяжёлые и с длинными именами, ломают Linux CI
+literature/
+
 # LaTeX промежуточные
 *.aux
 *.log
