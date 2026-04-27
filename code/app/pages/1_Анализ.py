@@ -142,59 +142,35 @@ if run:
     )
     st.plotly_chart(fig, use_container_width=True)
 
-    col_a, col_b = st.columns([1, 1], gap="large")
-    with col_a:
-        st.subheader("Range-Doppler изображение")
-        fig_rd = go.Figure(
-            data=go.Heatmap(
-                z=result.range_doppler_db,
-                x=result.ranges_m,
-                y=np.linspace(-0.5, 0.5, result.range_doppler_db.shape[0]),
-                colorscale="Viridis",
-                zmin=-40,
-                zmax=0,
-                colorbar=dict(title="дБ"),
-            )
+    st.subheader("Средний range-профиль")
+    fig_rp = go.Figure()
+    fig_rp.add_trace(
+        go.Scatter(
+            x=result.ranges_m,
+            y=20 * np.log10(result.range_profile / result.range_profile.max() + 1e-12),
+            mode="lines",
+            name="|Profile|, дБ",
+            line=dict(color="#2D2E83", width=2),
         )
-        fig_rd.update_layout(
-            xaxis_title="Дальность, м",
-            yaxis_title="Нормированная Doppler-частота",
-            height=420,
-            margin=dict(l=10, r=10, t=30, b=10),
-            paper_bgcolor="rgba(0,0,0,0)",
-        )
-        st.plotly_chart(fig_rd, use_container_width=True)
-
-    with col_b:
-        st.subheader("Средний range-профиль")
-        fig_rp = go.Figure()
-        fig_rp.add_trace(
-            go.Scatter(
-                x=result.ranges_m,
-                y=20 * np.log10(result.range_profile / result.range_profile.max() + 1e-12),
-                mode="lines",
-                name="|Profile|, дБ",
-                line=dict(color="#2D2E83", width=2),
-            )
-        )
-        fig_rp.add_vrect(
-            x0=result.gate_low_m,
-            x1=result.gate_high_m,
-            line_width=0,
-            fillcolor="#2D2E83",
-            opacity=0.12,
-            annotation_text="ворота цели",
-            annotation_position="top left",
-        )
-        fig_rp.update_layout(
-            xaxis_title="Дальность, м",
-            yaxis_title="Уровень, дБ",
-            height=420,
-            margin=dict(l=10, r=10, t=30, b=10),
-            showlegend=False,
-            paper_bgcolor="rgba(0,0,0,0)",
-        )
-        st.plotly_chart(fig_rp, use_container_width=True)
+    )
+    fig_rp.add_vrect(
+        x0=result.gate_low_m,
+        x1=result.gate_high_m,
+        line_width=0,
+        fillcolor="#2D2E83",
+        opacity=0.12,
+        annotation_text="ворота цели",
+        annotation_position="top left",
+    )
+    fig_rp.update_layout(
+        xaxis_title="Дальность, м",
+        yaxis_title="Уровень, дБ",
+        height=380,
+        margin=dict(l=10, r=10, t=30, b=10),
+        showlegend=False,
+        paper_bgcolor="rgba(0,0,0,0)",
+    )
+    st.plotly_chart(fig_rp, use_container_width=True)
 
     st.subheader("Диагностический отчёт (заготовка VLM)")
     st.info(

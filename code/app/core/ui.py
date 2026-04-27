@@ -59,8 +59,22 @@ def _inject_css() -> None:
         #MainMenu {visibility: hidden;}
         header[data-testid="stHeader"] {visibility: hidden; height: 0;}
         footer {visibility: hidden;}
-        /* убрать автонавигацию по pages/ из сайдбара */
-        section[data-testid="stSidebarNav"] {display: none;}
+        /* убрать автонавигацию по pages/ из сайдбара (все варианты) */
+        [data-testid="stSidebarNav"],
+        [data-testid="stSidebarNavItems"],
+        [data-testid="stSidebarNavLink"],
+        [data-testid="stSidebarNavLinkContainer"],
+        [data-testid="stSidebarNavSeparator"],
+        section[data-testid="stSidebar"] nav,
+        section[data-testid="stSidebar"] ul[data-testid*="Nav"] {
+            display: none !important;
+            height: 0 !important;
+            visibility: hidden !important;
+        }
+        /* в шапке сайдбара тоже бывает кнопка-список страниц */
+        section[data-testid="stSidebar"] [data-testid="stSidebarHeader"] > div:not(:last-child) {
+            display: none !important;
+        }
 
         /* ── глобальное ──────────────────────────────────────────── */
         html, body, [class*="css"] {
