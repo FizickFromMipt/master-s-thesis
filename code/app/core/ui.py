@@ -75,6 +75,33 @@ def _inject_css() -> None:
         section[data-testid="stSidebar"] [data-testid="stSidebarHeader"] > div:not(:last-child) {
             display: none !important;
         }
+        /* зафиксировать сайдбар: спрятать кнопку сворачивания/раскрытия */
+        [data-testid="stSidebarCollapseButton"],
+        [data-testid="stSidebarCollapsedControl"],
+        [data-testid="collapsedControl"],
+        button[kind="headerNoPadding"],
+        section[data-testid="stSidebar"] button[data-testid*="collaps" i],
+        section[data-testid="stSidebar"] button[aria-label*="sidebar" i] {
+            display: none !important;
+        }
+
+        /* ── фон: радиолокационные пульсации + soft-aurora ───────── */
+        [data-testid="stAppViewContainer"] {
+            background-color: #F8F9FC;
+            background-image:
+                radial-gradient(ellipse 1200px 900px at 0% 0%,
+                    rgba(45, 46, 131, 0.06) 0%, transparent 55%),
+                radial-gradient(ellipse 1100px 850px at 100% 100%,
+                    rgba(85, 87, 217, 0.05) 0%, transparent 55%),
+                url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'%3E%3Cg fill='none' stroke='%232D2E83' stroke-width='0.5' opacity='0.05'%3E%3Ccircle cx='0' cy='0' r='40'/%3E%3Ccircle cx='0' cy='0' r='80'/%3E%3Ccircle cx='0' cy='0' r='120'/%3E%3Ccircle cx='0' cy='0' r='160'/%3E%3Ccircle cx='0' cy='0' r='200'/%3E%3Ccircle cx='240' cy='240' r='40'/%3E%3Ccircle cx='240' cy='240' r='80'/%3E%3Ccircle cx='240' cy='240' r='120'/%3E%3Ccircle cx='240' cy='240' r='160'/%3E%3C/g%3E%3C/svg%3E");
+            background-repeat: no-repeat, no-repeat, repeat;
+            background-position: 0 0, 100% 100%, 0 0;
+        }
+        /* main и pages не должны перекрывать фон */
+        [data-testid="stMain"],
+        section[data-testid="stMain"] > div {
+            background: transparent !important;
+        }
 
         /* ── глобальное ──────────────────────────────────────────── */
         html, body, [class*="css"] {
