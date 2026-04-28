@@ -34,6 +34,7 @@ def init_page(page_title: str, *, sidebar: str = "collapsed") -> None:
         initial_sidebar_state=sidebar,
     )
     _inject_css()
+    _inject_sidebar_lock(sidebar)
     _render_top_nav()
 
 
@@ -75,7 +76,7 @@ def _inject_css() -> None:
         section[data-testid="stSidebar"] [data-testid="stSidebarHeader"] > div:not(:last-child) {
             display: none !important;
         }
-        /* зафиксировать сайдбар: спрятать кнопку сворачивания/раскрытия */
+        /* кнопка сворачивания/раскрытия сайдбара — всегда скрыта */
         [data-testid="stSidebarCollapseButton"],
         [data-testid="stSidebarCollapsedControl"],
         [data-testid="collapsedControl"],
@@ -287,6 +288,29 @@ def _inject_css() -> None:
         """,
         unsafe_allow_html=True,
     )
+
+
+def _inject_sidebar_lock(sidebar: str) -> None:
+    """Принудительно фиксирует сайдбар в нужном состоянии,
+    игнорируя любую запомненную в localStorage позицию."""
+    if sidebar == "expanded":
+        css = """
+        section[data-testid="stSidebar"] {
+            transform: none !important;
+            visibility: visible !important;
+            margin-left: 0 !important;
+            min-width: 22rem !important;
+            width: 22rem !important;
+            display: flex !important;
+        }
+        """
+    else:
+        css = """
+        section[data-testid="stSidebar"] {
+            display: none !important;
+        }
+        """
+    st.markdown(f"<style>{css}</style>", unsafe_allow_html=True)
 
 
 def _render_top_nav() -> None:
