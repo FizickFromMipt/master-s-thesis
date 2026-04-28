@@ -25,6 +25,25 @@ services:
     networks:
       - study-net
 
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    restart: unless-stopped
+    ports:
+      - "9000:9000"   # HTTP
+      - "9443:9443"   # HTTPS (самоподписанный сертификат)
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks:
+      - study-net
+
 networks:
   study-net:
     driver: bridge
+
+volumes:
+  # external — используем уже существующий volume на сервере,
+  # чтобы не потерять твой админ-аккаунт и настройки Portainer.
+  portainer_data:
+    external: true
