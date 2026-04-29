@@ -67,6 +67,27 @@ jobs:
           source: docker-compose.yml
           target: ${{ secrets.DEPLOY_PATH }}
 
+      - name: Записать .env на сервер из секретов
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          envs: HF_TOKEN
+          script: |
+            set -e
+            cd ${{ secrets.DEPLOY_PATH }}
+            umask 077
+            cat > .env <<EOF
+            APP_PORT=8501
+            HF_TOKEN=${HF_TOKEN}
+            HF_MODEL=llava-hf/llava-v1.6-mistral-7b-hf
+            HF_PROVIDER=auto
+            EOF
+
       - name: Pull & restart
         uses: appleboy/ssh-action@v1.2.0
         with:

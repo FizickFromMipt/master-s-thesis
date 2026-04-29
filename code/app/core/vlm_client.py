@@ -8,7 +8,7 @@ from typing import Any
 import requests
 
 VLM_URL = os.getenv("VLM_URL", "http://vlm:8000")
-TIMEOUT_S = 8.0
+TIMEOUT_S = 60.0  # HF API + LLaVA могут отвечать до 30 сек, плюс запас на cold-start
 
 
 def analyze(payload: dict[str, Any]) -> dict[str, Any] | None:

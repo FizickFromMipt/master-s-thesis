@@ -36,6 +36,11 @@ services:
     restart: unless-stopped
     expose:
       - "8000"
+    environment:
+      # HF Inference API; если токен пустой — режим заглушки
+      HF_TOKEN: ${HF_TOKEN:-}
+      HF_MODEL: ${HF_MODEL:-llava-hf/llava-v1.6-mistral-7b-hf}
+      HF_PROVIDER: ${HF_PROVIDER:-auto}
     volumes:
       # тот же датасет — read-only, для дообучения / инференса
       - study_uploads:/app/uploads:ro
