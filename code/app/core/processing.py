@@ -3,8 +3,7 @@
 
 Реализовано:
 - построение range-профиля (IFFT по частоте с оконной функцией);
-- range-Doppler изображение (двумерный спектр);
-- time-gating помех (простая маска по дальности);
+- селекция по дальности (классическая и сглаженная);
 - восстановление ДОР до и после обработки;
 - расчёт метрики PSR.
 
@@ -24,7 +23,6 @@ from .synthetic import C_LIGHT, SimulationResult
 class ProcessingResult:
     ranges_m: np.ndarray
     range_profile: np.ndarray           # средний по углам |·|
-    range_doppler_db: np.ndarray        # РЛИ в дБ
     rcs_raw_db: np.ndarray              # ДОР до обработки
     rcs_cleaned_db: np.ndarray          # ДОР после подавления помех
     rcs_classic_db: np.ndarray          # ДОР после классического time-gating
@@ -44,14 +42,6 @@ def _range_profile(iq: np.ndarray, freqs: np.ndarray) -> tuple[np.ndarray, np.nd
     dr = C_LIGHT / (2.0 * df * n_freq)
     ranges = np.arange(n_freq) * dr
     return ranges, profile
-
-
-def _range_doppler(profile: np.ndarray) -> np.ndarray:
-    """Range-Doppler: FFT по углу (медленное время)."""
-    rd = np.fft.fftshift(np.fft.fft(profile, axis=0), axes=0)
-    mag = np.abs(rd) + 1e-12
-    mag_db = 20.0 * np.log10(mag / mag.max())
-    return mag_db
 
 
 def _rcs_from_iq(iq: np.ndarray, freqs: np.ndarray) -> np.ndarray:
@@ -100,8 +90,6 @@ def process(
     profile_hybrid = profile * smooth_mask[None, :]
     iq_hybrid = np.fft.fft(profile_hybrid, axis=1)
 
-    rd_db = _range_doppler(profile)
-
     rcs_raw = _rcs_from_iq(iq, freqs)
     rcs_classic = _rcs_from_iq(iq_classic, freqs)
     rcs_hybrid = _rcs_from_iq(iq_hybrid, freqs)
@@ -115,7 +103,6 @@ def process(
     return ProcessingResult(
         ranges_m=ranges,
         range_profile=np.mean(np.abs(profile), axis=0),
-        range_doppler_db=rd_db,
         rcs_raw_db=rcs_raw,
         rcs_cleaned_db=rcs_hybrid,
         rcs_classic_db=rcs_classic,

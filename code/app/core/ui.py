@@ -16,6 +16,7 @@ REPO_URL = "https://github.com/FizickFromMipt/master-s-thesis"
 _NAV = [
     ("Главная", "app.py"),
     ("Анализ", "pages/1_Анализ.py"),
+    ("Загрузка", "pages/3_Загрузка.py"),
     ("О работе", "pages/2_О_работе.py"),
 ]
 
@@ -314,7 +315,7 @@ def _inject_sidebar_lock(sidebar: str) -> None:
 
 
 def _render_top_nav() -> None:
-    cols = st.columns([4, 1, 1, 1], vertical_alignment="center")
+    cols = st.columns([4, 1, 1, 1, 1], vertical_alignment="center")
     with cols[0]:
         st.markdown(
             f"""

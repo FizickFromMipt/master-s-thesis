@@ -2,8 +2,6 @@ name: study
 
 services:
   app:
-    # На сервере образ тянется из GHCR (см. .github/workflows/deploy.yml).
-    # Локально `docker compose up --build` пересоберёт под этим же тегом.
     image: ghcr.io/fizickfrommipt/master-s-thesis:latest
     build:
       context: ./code/app
@@ -11,17 +9,36 @@ services:
     pull_policy: always
     container_name: study-app
     restart: unless-stopped
+    depends_on:
+      vlm:
+        condition: service_started
     ports:
       - "${APP_PORT:-8501}:8501"
     environment:
       STREAMLIT_SERVER_ADDRESS: 0.0.0.0
       STREAMLIT_SERVER_PORT: 8501
       STREAMLIT_BROWSER_GATHER_USAGE_STATS: "false"
-    # Если в приложении понадобится читать данные/выгружать отчёты —
-    # раскомментируй маунты:
-    # volumes:
-    #   - ./data:/app/data:ro
-    #   - ./pdf:/app/pdf
+      VLM_URL: "http://vlm:8000"
+      UPLOAD_DIR: "/app/uploads"
+    volumes:
+      # реальные замеры из БЭК (датасет для дообучения VLM)
+      - study_uploads:/app/uploads
+    networks:
+      - study-net
+
+  vlm:
+    image: ghcr.io/fizickfrommipt/master-s-thesis-vlm:latest
+    build:
+      context: ./code/vlm
+      dockerfile: Dockerfile
+    pull_policy: always
+    container_name: study-vlm
+    restart: unless-stopped
+    expose:
+      - "8000"
+    volumes:
+      # тот же датасет — read-only, для дообучения / инференса
+      - study_uploads:/app/uploads:ro
     networks:
       - study-net
 
@@ -30,8 +47,8 @@ services:
     container_name: portainer
     restart: unless-stopped
     ports:
-      - "9000:9000"   # HTTP
-      - "9443:9443"   # HTTPS (самоподписанный сертификат)
+      - "9000:9000"
+      - "9443:9443"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - portainer_data:/data
@@ -43,7 +60,8 @@ networks:
     driver: bridge
 
 volumes:
-  # external — используем уже существующий volume на сервере,
-  # чтобы не потерять твой админ-аккаунт и настройки Portainer.
+  # external — используем уже существующий volume на сервере
   portainer_data:
     external: true
+  # local — для загруженных замеров (создастся compose-ом при первом up)
+  study_uploads:
