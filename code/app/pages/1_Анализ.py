@@ -25,34 +25,48 @@ init_page("Анализ", sidebar="expanded")
 st.title("Анализ измерений")
 st.caption("Интерактивная демонстрация пайплайна на синтетических данных.")
 
-with st.sidebar:
-    st.subheader("Сценарий")
-    preset_keys = list(PRESETS.keys())
-    preset_labels = {k: PRESETS[k]["chamber"].label for k in preset_keys}
+preset_keys = list(PRESETS.keys())
+preset_labels = {k: PRESETS[k]["chamber"].label for k in preset_keys}
+
+with st.container(border=True):
+    st.subheader("Сценарий и параметры")
     preset_choice = st.selectbox(
-        "Пресет камеры",
+        "Объект и условия измерения",
         preset_keys,
         format_func=lambda k: preset_labels[k],
         index=1,
     )
-    st.caption("Синтетика для демонстрации пайплайна.")
 
-    st.subheader("Параметры обработки")
-    gate_width = st.slider(
-        "Ширина селекции по дальности, м",
-        min_value=0.1,
-        max_value=2.0,
-        value=0.6,
-        step=0.1,
+    preset = PRESETS[preset_choice]
+    chamber = preset["chamber"]
+    measurement = preset["measurement"]
+    cyl = measurement.cylinder
+
+    # Полное описание выбранного объекта и камеры
+    quality_ru = (
+        "удовлетворительная" if chamber.anechoic_quality == "satisfactory"
+        else "неудовлетворительная"
     )
-    seed = st.number_input("Seed генератора", value=42, step=1)
-    st.write("")
-    run = st.button("Обработать", type="primary", use_container_width=True)
+    ranges_ru = ", ".join(f"{r:.1f}" for r in chamber.clutter_ranges_m)
+    st.markdown(
+        f"**Объект:** {cyl.description}.  \n"
+        f"**Камера:** безэховость {quality_ru}; "
+        f"помехи на дальностях {ranges_ru} м."
+    )
 
-preset = PRESETS[preset_choice]
-chamber = preset["chamber"]
-measurement = preset["measurement"]
-cyl = measurement.cylinder
+    pc1, pc2 = st.columns(2)
+    with pc1:
+        gate_width = st.slider(
+            "Ширина селекции по дальности, м",
+            min_value=0.1,
+            max_value=2.0,
+            value=0.6,
+            step=0.1,
+        )
+    with pc2:
+        seed = st.number_input("Seed генератора", value=42, step=1)
+
+    run = st.button("Обработать", type="primary", use_container_width=True)
 
 with st.container(border=True):
     cfg1, cfg2, cfg3 = st.columns(3)

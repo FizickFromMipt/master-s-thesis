@@ -33,7 +33,7 @@ def _logo_uri() -> str:
 def init_page(page_title: str, *, sidebar: str = "collapsed") -> None:
     """Вызывается в самом верху каждой страницы."""
     st.set_page_config(
-        page_title=f"{page_title} · ЭПР в БЭК",
+        page_title=f"{page_title} · ДОР",
         page_icon=str(LOGO_PATH),
         layout="centered",
         initial_sidebar_state=sidebar,
@@ -46,11 +46,9 @@ def init_page(page_title: str, *, sidebar: str = "collapsed") -> None:
 def render_footer() -> None:
     """Лёгкий минималистичный подвал."""
     st.markdown(
-        f"""
+        """
         <div class="app-footer">
             Designed by <strong>Alex Pevnenko</strong> © 2026
-            <span class="app-footer__sep">·</span>
-            <a href="{REPO_URL}" target="_blank" rel="noopener">GitHub</a>
         </div>
         """,
         unsafe_allow_html=True,
@@ -79,7 +77,7 @@ def _render_drawer() -> None:
             <div class="drawer-brand">
                 <img class="drawer-brand__logo"
                      src="{_logo_uri()}" alt="logo">
-                <span class="drawer-brand__title">ЭПР · БЭК</span>
+                <span class="drawer-brand__title">ДОР · демо</span>
             </div>
             """,
             unsafe_allow_html=True,
