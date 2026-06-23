@@ -54,34 +54,11 @@ chamber = preset["chamber"]
 measurement = preset["measurement"]
 cyl = measurement.cylinder
 
-left, right = st.columns([1, 1], gap="large")
-with left:
-    with st.container(border=True):
-        st.subheader("Конфигурация")
-        st.markdown(
-            f"""
-- **Сценарий:** {chamber.label}
-- **Цилиндр:** {cyl.description}
-- **Диапазон частот:** {measurement.f_start_hz / 1e9:.1f}–{measurement.f_stop_hz / 1e9:.1f} ГГц
-- **Точек по частоте:** {measurement.n_freq}
-- **Углов:** {measurement.n_angles}
-- **Дальность цели:** {measurement.target_range_m:.2f} м
-- **Помехи:** {len(chamber.clutter_ranges_m)} источник(ов),
-  уровень {chamber.clutter_level_db:+.1f} дБ относительно цели
-            """
-        )
-with right:
-    with st.container(border=True):
-        st.subheader("Целевые показатели")
-        st.markdown(
-            """
-- Δ между теоретической и экспериментальной σ — **до 1.5 дБ**
-- ДОР приведена к **0 дБ·м² ≈ 1 м²** (нормировка по медиане);
-  справочно стелс-уровни — **10⁻² … 10⁻³ м²**
-- Положительный PSR (чем больше, тем лучше подавление)
-- Восстановленная ДОР ближе к эталонной форме цилиндра
-            """
-        )
+with st.container(border=True):
+    cfg1, cfg2, cfg3 = st.columns(3)
+    cfg1.metric("Диапазон", f"{measurement.f_start_hz / 1e9:.0f}–{measurement.f_stop_hz / 1e9:.0f} ГГц")
+    cfg2.metric("Помехи", f"{chamber.clutter_level_db:+.0f} дБ")
+    cfg3.metric("Цель", f"Ø{cyl.diameter_m * 100:.0f}×{cyl.height_m * 100:.0f} см")
 
 if run:
     with st.spinner("Симуляция и обработка…"):
@@ -131,18 +108,23 @@ if run:
             theta=sim.angles_deg,
             mode="lines",
             name="Гибридный метод",
-            line=dict(width=2.5, color="#2D2E83"),
+            line=dict(width=2.5, color="#34E0A1"),
         )
     )
     fig.update_layout(
+        template="plotly_dark",
+        font=dict(color="#F2F5F7"),
         polar=dict(
-            radialaxis=dict(range=[-40, 5], ticksuffix=" дБ", tickfont=dict(size=10)),
-            angularaxis=dict(direction="clockwise"),
+            bgcolor="rgba(0,0,0,0)",
+            radialaxis=dict(range=[-40, 5], ticksuffix=" дБ", tickfont=dict(size=10),
+                            gridcolor="#252C38"),
+            angularaxis=dict(direction="clockwise", gridcolor="#252C38"),
         ),
         legend=dict(orientation="h", y=-0.05),
         height=520,
         margin=dict(l=10, r=10, t=30, b=10),
         paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
     )
     st.plotly_chart(fig, use_container_width=True)
 
@@ -153,25 +135,30 @@ if run:
             x=result.ranges_m,
             y=20 * np.log10(result.range_profile / result.range_profile.max() + 1e-12),
             mode="lines",
-            line=dict(color="#2D2E83", width=2),
+            line=dict(color="#34E0A1", width=2),
         )
     )
     fig_rp.add_vrect(
         x0=result.gate_low_m,
         x1=result.gate_high_m,
         line_width=0,
-        fillcolor="#2D2E83",
-        opacity=0.12,
+        fillcolor="#34E0A1",
+        opacity=0.14,
         annotation_text="ворота цели",
         annotation_position="top left",
     )
     fig_rp.update_layout(
+        template="plotly_dark",
+        font=dict(color="#F2F5F7"),
         xaxis_title="Дальность, м",
         yaxis_title="Уровень, дБ",
+        xaxis=dict(gridcolor="#252C38"),
+        yaxis=dict(gridcolor="#252C38"),
         height=380,
         margin=dict(l=10, r=10, t=30, b=10),
         showlegend=False,
         paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
     )
     st.plotly_chart(fig_rp, use_container_width=True)
 
